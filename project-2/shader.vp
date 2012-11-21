@@ -1,0 +1,16 @@
+// version of glsl 
+#version 330
+
+// inputs to the vertex shader
+in vec4 vVertex;
+in vec4 vColor;
+uniform mat4x4 viewMatrix;
+
+// output: only color
+out vec4 vVaryingColor;
+
+void main() 
+{
+    vVaryingColor = vColor;
+    gl_Position = viewMatrix*vVertex;
+}
