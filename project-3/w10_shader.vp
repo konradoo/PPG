@@ -1,0 +1,68 @@
+#version 330
+
+struct PointLight 
+{
+    vec3  pos; //in eye space !!
+    vec3  color;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// uniforms
+uniform mat4x4 matModelview;
+uniform mat4x4 matProjection;
+uniform mat3x3 matNormal;
+
+uniform PointLight light0;
+
+////////////////////////////////////////////////////////////////////////////////
+// attribs
+layout(location=0) in vec3 vVertex;
+layout(location=1) in vec3 vNormal;
+layout(location=2) in vec2 vTexCoord0;
+
+////////////////////////////////////////////////////////////////////////////////
+// output
+out vec4 vVaryingColor; 
+out vec2 vVaryingTexCoord0;
+out vec4 vSpecularColor;
+////////////////////////////////////////////////////////////////////////////////
+void main() 
+{
+    vec4 v = vec4(vVertex, 1.0);	
+	vVaryingTexCoord0 = vTexCoord0;    
+    
+    
+// calculate position in eye(camera) space
+    vec3 eyeNormal = normalize(matNormal * vNormal);
+    
+
+// calculate lighting (vectors, etc.)
+    vec4 position = matModelview * v;   
+    vec3 position3 = position.xyz / position.w;
+    vec3 fromPoint2Light = normalize(light0.pos - position3); // wspó³rzedne wektora do swiatla (wektor od wierzcholka do punktu swiatla)
+
+    
+// calculate diffuse color   
+    float diffuse = dot(eyeNormal, fromPoint2Light); // fromPoint2Light i normal musz¹ byæ znormalizowane!
+	vec3 diffuseColor = max(diffuse, 0.0f) * light0.color;
+    
+    
+// calculate specular:
+	float specular = 0;    
+    vec3 specularColor = vec3(0.0f);
+    
+    vec3 lightRef = normalize(reflect(-fromPoint2Light, eyeNormal));
+	
+	if (diffuse > 0.0f)
+	{
+		//specular = pow(dot(lightRef, vec3(0, 0, -1)), 128.0f); // lub to
+		
+		specular = pow(dot(lightRef, fromPoint2Light), 64.0f);
+		specularColor = vec3(1.0)*max(specular, 0.0f);
+	}
+	
+	vSpecularColor = vec4(specular * light0.color,1);	
+	vVaryingColor = vec4(0.2) + vec4(diffuseColor + specularColor, 1.0); // efekt odbicia na powiechrzni
+	
+	gl_Position = matProjection * matModelview * v;
+}
