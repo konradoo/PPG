@@ -1,0 +1,46 @@
+#version 330
+
+struct PointLight 
+{
+    vec3  pos; //in eye space !!
+    vec3  color;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// uniforms
+uniform mat4x4 matModelview;
+uniform mat4x4 matProjection;
+uniform mat3x3 matNormal;
+
+uniform PointLight light0;
+
+////////////////////////////////////////////////////////////////////////////////
+// attribs
+layout(location=0) in vec3 vVertex;
+layout(location=1) in vec3 vNormal;
+layout(location=2) in vec2 vTexCoord0;
+
+////////////////////////////////////////////////////////////////////////////////
+// output
+smooth out vec3 eyeNormal;
+smooth out vec3 fromPoint2Light;
+////////////////////////////////////////////////////////////////////////////////
+void main() 
+{
+    vec4 v = vec4(vVertex, 1.0);    
+    
+// calculate position in eye(camera) space
+    eyeNormal = normalize(matNormal * vNormal);
+    
+
+// calculate lighting (vectors, etc.)
+    vec4 position = matModelview * v;   
+    vec3 position3 = position.xyz / position.w;
+    
+    
+    
+    fromPoint2Light = normalize(light0.pos - position3); // wspó³rzedne wektora do swiatla (wektor od wierzcholka do punktu swiatla)
+
+    
+	gl_Position = matProjection * matModelview * v;
+}
